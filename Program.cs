@@ -78,14 +78,15 @@ namespace Snake
         
         static void CheckCollision() //collision checking. TODO: Check all the collisions, get it types and invoke other operations
         {
-            foreach (var g in GameObjects)
+            List<GameObject> tmp_GameObjects = GameObjects.ToList(); //some weird shitty code to make a new instance of gameobjects, so that if object is deleted on collision - don't break an app
+
+            foreach (var g in tmp_GameObjects)
             {
-                foreach (var g1 in GameObjects.Where(d => d != g))
+                foreach (var g1 in tmp_GameObjects.Where(d => d != g))                  //for each gameobject check all the other objects if it's position is same. 
                 {
                     if (g.Position.X == g1.Position.X && g.Position.Y == g1.Position.Y)
                     {
-                        g.OnCollide(g1);
-                        return;
+                        g.OnCollide(g1);                                                 
                     }
                 }
             }
@@ -142,7 +143,7 @@ namespace Snake
                 public SnakeBlock Parent { get; set; }
                 public override void OnCollide(GameObject obj2)
                 {
-                    if (IsHead && obj2.Type == ObjectType.Player || ((SnakeBlock)obj2).IsHead)
+                    if (IsHead && obj2.Type == ObjectType.Player)
                     {
                         Debug.Print("LOST");
                     }
