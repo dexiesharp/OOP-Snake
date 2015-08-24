@@ -9,35 +9,36 @@ namespace Snake
 {
     class Program
     {
-        public static List<GameObject> GameObjects = new List<GameObject>();
-        public static Snake player = new Snake();
+        public static List<GameObject> GameObjects = new List<GameObject>();    //Collection of all objects which should be drawn on the screens
+        public static Snake player = new Snake();                               //player object
 
         static void Main(string[] args)
         {
-            var StartPos = new Position() { PosX = 40, PosY = 12 };
+            var StartPos = new Position() { X = 40, Y = 12 };             //Center of the screen
             player = new Snake()
             {
                 Type = ObjectType.Player,
                 MoveDirection = new MoveDirection() { Direction = Direction.Up },
                 Blocks = new List<SnakeBlock>()
-                {
+                {   //Starting snake length is 3 blocks.
                     new SnakeBlock() { IsHead = true, Symbol = "#", Position = StartPos },
-                    new SnakeBlock() { IsHead = false, Symbol = "#", Position = new Position(){ PosX = StartPos.PosX - 1, PosY = StartPos.PosY } },
-                    new SnakeBlock() { IsHead = false, Symbol = "#", Position = new Position(){ PosX = StartPos.PosX - 2, PosY = StartPos.PosY } }
+                    new SnakeBlock() { IsHead = false, Symbol = "#", Position = new Position(){ X = StartPos.X - 1, Y = StartPos.Y } },
+                    new SnakeBlock() { IsHead = false, Symbol = "#", Position = new Position(){ X = StartPos.X - 2, Y = StartPos.Y } }
                 }
             };
-
-            player.Blocks.ElementAt(1).Parent = player.Blocks.ElementAt(0);
-            player.Blocks.ElementAt(2).Parent = player.Blocks.ElementAt(1);
-            GameObjects.Add(new Treat() { Position = new Position() { PosX = 10, PosY = 10 }, Symbol = "@", Type = ObjectType.Treat });
-
+            player.Blocks.ElementAt(1).Parent = player.Blocks.ElementAt(0); //we actually need to hardcode parents for existing blocks. 
+            player.Blocks.ElementAt(2).Parent = player.Blocks.ElementAt(1); //todo: override player.blocks.add() to automaticaly setup parents, or make parents auto-assigning
+                             
+            //Adding objects to GameObjects or they won't be drawn.   
             GameObjects.Add(player);
+            GameObjects.Add(new Treat() { Position = new Position() { X = 10, Y = 10 }, Symbol = "@", Type = ObjectType.Treat });
 
+            //initial draw
             Draw();
 
             while (true)
             {
-                switch (Console.ReadKey().Key)
+                switch (Console.ReadKey().Key)  //screen updates only when key is pressed, should be replaced with auto-movement
                 {
                     case ConsoleKey.UpArrow:
                         {
@@ -61,7 +62,7 @@ namespace Snake
                         }
                     case ConsoleKey.Spacebar:
                         {
-                            player.Eat();
+                            player.Eat(new Treat() { Position = player.HeadBlock.Position, Type = ObjectType.Treat });
                             break;
                         }
                 }
@@ -69,28 +70,27 @@ namespace Snake
             }
         }
 
-        static void Tick()
+        static void Tick() //Should be invoked once per some time. Must do all the logic
         {
             CheckCollision();
             player.Move();
             Draw();
         }
         
-        static void CheckCollision()
+        static void CheckCollision() //collision checking. TODO: Check all the collisions, get it types and invoke other operations
         {
             var Treats = GameObjects.Where(o => o.Type == ObjectType.Treat);
             foreach (var t in Treats)
             {
-                if (t.Position.PosX == player.HeadBlock.Position.PosX && t.Position.PosY == player.HeadBlock.Position.PosY)
+                if (t.Position.X == player.HeadBlock.Position.X && t.Position.Y == player.HeadBlock.Position.Y)
                 {
-                    player.Eat();
-                    GameObjects.Remove(t);
+                    player.Eat(t);
                     break;
                 }
             }
         }
 
-        static void Draw()
+        static void Draw() //redraws screen
         {
             Console.Clear();
             foreach (var GameObject in GameObjects)
@@ -99,17 +99,26 @@ namespace Snake
             }
         }
 
+        public enum ObjectType
+        {
+            Player, Treat
+        }
 
-        public class GameObject
+        public class GameObject //probably must be an interface.
         {
             public ObjectType Type { get; set; }
             public string Symbol { get; set; }
             public Position Position { get; set; }
             public virtual void Draw()
             {
-                Console.SetCursorPosition(Position.PosX, Position.PosY);
+                Console.SetCursorPosition(Position.X, Position.Y);
                 Console.Write(Symbol);
             }
+        }
+
+        public class Treat : GameObject
+        {
+            //prop Points
         }
 
         public class SnakeBlock : GameObject
@@ -118,50 +127,53 @@ namespace Snake
             public SnakeBlock Parent { get; set; }
         }
 
-        public class Treat : GameObject
-        {
-        }
-
         public class Snake : GameObject
         {
-            public int Length {
+            public int Length {             
                 get{return Blocks.Count;}
             }
             public SnakeBlock HeadBlock { get{return Blocks.First();}}
             public List<SnakeBlock> Blocks { get; set; }
             public MoveDirection MoveDirection { get; set; }
+
             public void Move()
             {
                 for (int i = Blocks.Count - 1; i > 0; i--)
                 {
-                    if (!Blocks.ElementAt(i).IsHead)
+                    if (!Blocks.ElementAt(i).IsHead)  //Every move each block take it's parent position, except for head, which takes new position according to snake movement direction
                     {
-                        Blocks.ElementAt(i).Position = new Position() {
-                            PosX = Blocks.ElementAt(i).Parent.Position.PosX,
-                            PosY = Blocks.ElementAt(i).Parent.Position.PosY, };
+                        Blocks.ElementAt(i).Position = new Position()
+                        {  //we MUST instantiate new position object, and I can't explain why. Try setting it this way: Blocks.ElementAt(i).Position = Blocks.ElementAt(i).Parent.Position; and it doesn't work
+                            X = Blocks.ElementAt(i).Parent.Position.X,
+                            Y = Blocks.ElementAt(i).Parent.Position.Y, };
                     }
                 }
-                HeadBlock.Position.PosY += MoveDirection.Vertical;
-                HeadBlock.Position.PosX += MoveDirection.Horizontal;
+                HeadBlock.Position.Y += MoveDirection.Vertical;  //this approach saves long-ass switch(direction) train
+                HeadBlock.Position.X += MoveDirection.Horizontal;
             }
-            public void Eat() //todo: add food object
+            public void Eat(GameObject t) 
             {
-                Position PosToAdd = HeadBlock.Position;
-                Blocks.Insert(0, new SnakeBlock() { IsHead = true, Position = PosToAdd, Symbol = "#" });
+                Position EatLocation = t.Position;
+                Blocks.Insert(0, new SnakeBlock() { IsHead = true, Position = EatLocation, Symbol = "#" });
                 Blocks.ElementAt(1).IsHead = false;
                 Blocks.ElementAt(1).Parent = Blocks.First();
+                GameObjects.Remove(t);
             }
-            public override void Draw()
+            public override void Draw()  //overrides default draw method to draw each block. 
             {
                 foreach (var b in Blocks)
                 {
-                    Console.SetCursorPosition(b.Position.PosX, b.Position.PosY);
+                    Console.SetCursorPosition(b.Position.X, b.Position.Y);
                     Console.Write(b.Symbol);
                 }
             }
 
         }
-        public class MoveDirection
+        public enum Direction
+        {
+            Up, Down, Right, Left
+        }
+        public class MoveDirection //pretty complicated approach, but saves a lot of code
         {
             public Direction Direction { get; set; }
             public int Vertical
@@ -200,19 +212,12 @@ namespace Snake
                 } }
         }
 
-        public enum Direction
-        {
-            Up, Down, Right, Left
-        }
 
-        public enum ObjectType
-        {
-            Player, Treat
-        }
+
         public class Position
         {
-            public int PosX { get; set; }
-            public int PosY { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
         }
     }
 }
