@@ -17,20 +17,18 @@ namespace Snake
             var StartPos = new Position() { X = 40, Y = 12 };             //Center of the screen
             player = new Snake()
             {
-                Type = ObjectType.Player,
                 MoveDirection = new MoveDirection() { Direction = Direction.Up },
-                Blocks = new List<SnakeBlock>()
+                Blocks = new List<Snake.SnakeBlock>()
                 {   //Starting snake length is 3 blocks.
-                    new SnakeBlock() { IsHead = true, Symbol = "#", Position = StartPos },
-                    new SnakeBlock() { IsHead = false, Symbol = "#", Position = new Position(){ X = StartPos.X - 1, Y = StartPos.Y } },
-                    new SnakeBlock() { IsHead = false, Symbol = "#", Position = new Position(){ X = StartPos.X - 2, Y = StartPos.Y } }
+                    new Snake.SnakeBlock() { IsHead = true, Symbol = "#", Position = StartPos, Type = ObjectType.Player}
                 }
             };
-            player.Blocks.ElementAt(1).Parent = player.Blocks.ElementAt(0); //we actually need to hardcode parents for existing blocks. 
-            player.Blocks.ElementAt(2).Parent = player.Blocks.ElementAt(1); //todo: override player.blocks.add() to automaticaly setup parents, or make parents auto-assigning
-                             
-            //Adding objects to GameObjects or they won't be drawn.   
-            GameObjects.Add(player);
+            GameObjects.Add(player.Blocks.First());
+            player.Add();    //let snake be 3 blocks long
+            player.Add();
+            player.Move();
+            player.Move();
+            //Adding objects to GameObjects or they won't be drawn.  
             GameObjects.Add(new Treat() { Position = new Position() { X = 10, Y = 10 }, Symbol = "@", Type = ObjectType.Treat });
 
             //initial draw
@@ -72,6 +70,7 @@ namespace Snake
 
         static void Tick() //Should be invoked once per some time. Must do all the logic
         {
+
             CheckCollision();
             player.Move();
             Draw();
@@ -79,15 +78,18 @@ namespace Snake
         
         static void CheckCollision() //collision checking. TODO: Check all the collisions, get it types and invoke other operations
         {
-            var Treats = GameObjects.Where(o => o.Type == ObjectType.Treat);
-            foreach (var t in Treats)
+            foreach (var g in GameObjects)
             {
-                if (t.Position.X == player.HeadBlock.Position.X && t.Position.Y == player.HeadBlock.Position.Y)
+                foreach (var g1 in GameObjects.Where(d => d != g))
                 {
-                    player.Eat(t);
-                    break;
+                    if (g.Position.X == g1.Position.X && g.Position.Y == g1.Position.Y)
+                    {
+                        g.OnCollide(g1);
+                        return;
+                    }
                 }
             }
+
         }
 
         static void Draw() //redraws screen
@@ -114,21 +116,39 @@ namespace Snake
                 Console.SetCursorPosition(Position.X, Position.Y);
                 Console.Write(Symbol);
             }
+
+            public virtual void OnCollide(GameObject obj2) { }
         }
 
         public class Treat : GameObject
         {
             //prop Points
+            public override void OnCollide(GameObject obj2)
+            {
+                if (obj2.Type == ObjectType.Player)
+                {
+                    player.Eat(this);
+                }
+            }
         }
 
-        public class SnakeBlock : GameObject
-        {
-            public bool IsHead { get; set; }
-            public SnakeBlock Parent { get; set; }
-        }
 
-        public class Snake : GameObject
+
+        public class Snake
         {
+            public class SnakeBlock : GameObject
+            {
+                public bool IsHead { get; set; }
+                public SnakeBlock Parent { get; set; }
+                public override void OnCollide(GameObject obj2)
+                {
+                    if (IsHead && obj2.Type == ObjectType.Player || ((SnakeBlock)obj2).IsHead)
+                    {
+                        Debug.Print("LOST");
+                    }
+                }
+            }
+
             public int Length {             
                 get{return Blocks.Count;}
             }
@@ -153,13 +173,10 @@ namespace Snake
             }
             public void Eat(GameObject t) 
             {
-                Position EatLocation = t.Position;
-                Blocks.Insert(0, new SnakeBlock() { IsHead = true, Position = EatLocation, Symbol = "#" });
-                Blocks.ElementAt(1).IsHead = false;
-                Blocks.ElementAt(1).Parent = Blocks.First();
+                Add();
                 GameObjects.Remove(t);
             }
-            public override void Draw()  //overrides default draw method to draw each block. 
+            public void Draw()  //overrides default draw method to draw each block. 
             {
                 foreach (var b in Blocks)
                 {
@@ -167,12 +184,21 @@ namespace Snake
                     Console.Write(b.Symbol);
                 }
             }
+            public void Add()
+            {
+                Position AddLocation = HeadBlock.Position;
+                Blocks.Insert(0, new SnakeBlock() { IsHead = true, Position = AddLocation, Symbol = "#" });
+                GameObjects.Add(Blocks.First());
+                Blocks.ElementAt(1).IsHead = false;
+                Blocks.ElementAt(1).Parent = Blocks.First();
+            }
 
         }
         public enum Direction
         {
             Up, Down, Right, Left
         }
+
         public class MoveDirection //pretty complicated approach, but saves a lot of code
         {
             public Direction Direction { get; set; }
@@ -211,8 +237,6 @@ namespace Snake
                     }
                 } }
         }
-
-
 
         public class Position
         {
