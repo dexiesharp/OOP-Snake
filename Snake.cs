@@ -18,7 +18,7 @@ namespace Snake
             {
                 if (IsHead && obj2.Type == ObjectType.Player)
                 {
-                    Debug.Print("LOST");
+                    Program.lost = true;
                 }
             }
         }
@@ -44,13 +44,22 @@ namespace Snake
                     };
                 }
             }
-            HeadBlock.Position.Y += MoveDirection.Vertical;  //this approach saves long-ass switch(direction) train
-            HeadBlock.Position.X += MoveDirection.Horizontal;
+            if ((HeadBlock.Position.Y + MoveDirection.Vertical) < 24 &&     //check if we are still in screen
+                (HeadBlock.Position.Y + MoveDirection.Vertical) > 0 &&
+                (HeadBlock.Position.X + MoveDirection.Horizontal) < 80 &&
+                (HeadBlock.Position.X + MoveDirection.Horizontal) > 0)
+            {
+                HeadBlock.Position.Y += MoveDirection.Vertical;  //this approach saves long-ass switch(direction) train
+                HeadBlock.Position.X += MoveDirection.Horizontal;
+            } else { Program.lost = true; }
+
         }
         public void Eat(GameObject t)
         {
             Add();
             Program.GameObjects.Remove(t);
+            Random rng = new Random();
+            Program.GameObjects.Add(new Treat() { Position = new Position() {X = rng.Next(80), Y=rng.Next(24) }, Symbol="@", Type=ObjectType.Treat });
         }
         public void Draw()  //overrides default draw method to draw each block. 
         {

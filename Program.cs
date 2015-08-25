@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using static Snake.Core;
 
@@ -12,9 +13,11 @@ namespace Snake
     {
         public static List<GameObject> GameObjects = new List<GameObject>();    //Collection of all objects which should be drawn on the screens
         public static Snake player = new Snake();                               //player object
+        public static bool lost = false;
 
         static void Main(string[] args)
         {
+            double sleepTime = 200;
             var StartPos = new Position() { X = 40, Y = 12 };             //Center of the screen
             player = new Snake()
             {
@@ -35,43 +38,61 @@ namespace Snake
             //initial draw
             Draw();
 
-            while (true)
+
+            while (!lost)
             {
-                switch (Console.ReadKey().Key)  //screen updates only when key is pressed, should be replaced with auto-movement
+                var tickNow = DateTime.Now;
+                if (Console.KeyAvailable)
                 {
-                    case ConsoleKey.UpArrow:
-                        {
-                            player.MoveDirection.Direction = Direction.Up;
-                            break;
-                        }
-                    case ConsoleKey.DownArrow:
-                        {
-                            player.MoveDirection.Direction = Direction.Down;
-                            break;
-                        }
-                    case ConsoleKey.LeftArrow:
-                        {
-                            player.MoveDirection.Direction = Direction.Left;
-                            break;
-                        }
-                    case ConsoleKey.RightArrow:
-                        {
-                            player.MoveDirection.Direction = Direction.Right;
-                            break;
-                        }
-                    case ConsoleKey.Spacebar:
-                        {
-                            player.Eat(new Treat() { Position = player.HeadBlock.Position, Type = ObjectType.Treat });
-                            break;
-                        }
+                    switch (Console.ReadKey().Key)  //screen updates only when key is pressed, should be replaced with auto-movement
+                    {
+                        case ConsoleKey.UpArrow:
+                            {
+                                if (player.MoveDirection.Direction != Direction.Down)
+                                {
+                                    player.MoveDirection.Direction = Direction.Up;
+                                }
+                                break;
+                            }
+                        case ConsoleKey.DownArrow:
+                            {
+                                if (player.MoveDirection.Direction != Direction.Up)
+                                {
+                                    player.MoveDirection.Direction = Direction.Down;
+                                }
+                                break;
+                            }
+                        case ConsoleKey.LeftArrow:
+                            {
+                                if (player.MoveDirection.Direction != Direction.Right)
+                                {
+                                    player.MoveDirection.Direction = Direction.Left;
+                                }
+                                break;
+                            }
+                        case ConsoleKey.RightArrow:
+                            {
+                                if (player.MoveDirection.Direction != Direction.Left)
+                                {
+                                    player.MoveDirection.Direction = Direction.Right;
+                                }
+                                break;
+                            }
+                    }
                 }
                 Tick();
+                sleepTime -= 0.01;
+                Thread.Sleep((int)sleepTime);
             }
+
+            Console.SetCursorPosition(0,0);
+            Console.Write("You lost!");
+            Console.ReadKey();
+
         }
 
-        static void Tick() //Should be invoked once per some time. Must do all the logic
+        static void Tick() //Does all the logic
         {
-
             CheckCollision();
             player.Move();
             Draw();
