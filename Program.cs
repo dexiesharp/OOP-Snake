@@ -17,6 +17,7 @@ namespace Snake
 
         static void Main(string[] args)
         {
+            int boost;
             double sleepTime = 200;
             var StartPos = new Position() { X = 40, Y = 12 };             //Center of the screen
             player = new Snake()
@@ -35,9 +36,7 @@ namespace Snake
             //Adding objects to GameObjects or they won't be drawn.  
             GameObjects.Add(new Treat() { Position = new Position() { X = 10, Y = 10 }, Symbol = "@", Type = ObjectType.Treat });
 
-            //initial draw
-            Draw();
-
+            Console.WriteLine("Press any key to start the game!");
 
             while (!lost)
             {
@@ -82,12 +81,12 @@ namespace Snake
                 }
                 Tick();
                 sleepTime -= 0.01;
-                Thread.Sleep((int)sleepTime);
+                Thread.Sleep((int)(sleepTime- boost));
             }
 
             Console.SetCursorPosition(0,0);
             Console.Write("You lost!");
-            Console.ReadKey();
+            Console.ReadLine();
 
         }
 
@@ -101,6 +100,7 @@ namespace Snake
         static void Draw() //redraws screen
         {
             Console.Clear();
+            Console.Write("Score:" + player.Score);
             foreach (var GameObject in GameObjects)
             {
                 GameObject.Draw();

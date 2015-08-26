@@ -23,6 +23,7 @@ namespace Snake
             }
         }
 
+        public int Score { get; set; }
         public int Length
         {
             get { return Blocks.Count; }
@@ -59,7 +60,8 @@ namespace Snake
             Add();
             Program.GameObjects.Remove(t);
             Random rng = new Random();
-            Program.GameObjects.Add(new Treat() { Position = new Position() {X = rng.Next(80), Y=rng.Next(24) }, Symbol="@", Type=ObjectType.Treat });
+            Program.GameObjects.Add(new Treat() { Position = new Position() {X = rng.Next(1,79), Y=rng.Next(1, 23) }, Symbol="@", Type=ObjectType.Treat });
+            this.Score++;
         }
         public void Draw()  //overrides default draw method to draw each block. 
         {
