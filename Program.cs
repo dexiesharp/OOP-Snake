@@ -81,7 +81,7 @@ namespace Snake
                 }
                 Tick();
                 sleepTime -= 0.01;
-                Thread.Sleep((int)(sleepTime- boost));
+                Thread.Sleep((int)(sleepTime));
             }
 
             Console.SetCursorPosition(0,0);
