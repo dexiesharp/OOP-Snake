@@ -17,24 +17,22 @@ namespace Snake
 
         static void Main(string[] args)
         {
-            int boost;
+            Random positionCoordinate = new Random(); //rng to place first treat randomly 
             double sleepTime = 200;
             var StartPos = new Position() { X = 40, Y = 12 };             //Center of the screen
             player = new Snake()
             {
                 MoveDirection = new MoveDirection() { Direction = Direction.Up },
-                Blocks = new List<Snake.SnakeBlock>()
-                {   //Starting snake length is 3 blocks.
-                    new Snake.SnakeBlock() { IsHead = true, Symbol = "#", Position = StartPos, Type = ObjectType.Player}
-                }
+                Blocks = new List<Snake.SnakeBlock>(){new Snake.SnakeBlock() { IsHead = true, Symbol = "#", Position = StartPos, Type = ObjectType.Player}}
             };
             GameObjects.Add(player.Blocks.First());
-            player.Add();    //let snake be 3 blocks long
-            player.Add();
-            player.Move();
-            player.Move();
+            player.Add();    //adding 2 blocks, so that snake is 3 blocks from beggining
+            player.Add();     
+            player.Move();   // also moving it twice, so that new blocks don't overlap and don't cause collision
+            player.Move();    
             //Adding objects to GameObjects or they won't be drawn.  
-            GameObjects.Add(new Treat() { Position = new Position() { X = 10, Y = 10 }, Symbol = "@", Type = ObjectType.Treat });
+
+            GameObjects.Add(new Treat() { Position = new Position() { X = positionCoordinate.Next(1, 39), Y = positionCoordinate.Next(1,11) }, Symbol = "@", Type = ObjectType.Treat });
 
             Console.WriteLine("Press any key to start the game!");
 
