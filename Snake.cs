@@ -10,6 +10,22 @@ namespace Snake
 {
     public class Snake
     {
+        public Snake()
+        {
+            Random rnd = new Random();
+            Direction dir = (Direction)rnd.Next(0, 3);
+            var StartPos = new Position() { X = 40, Y = 12 };                               //Center of the screen
+
+            MoveDirection = new MoveDirection() { Direction = dir};
+            Blocks = new List<Snake.SnakeBlock>() {
+                new SnakeBlock() { IsHead = true, Symbol = "#", Position = StartPos, Type = ObjectType.Player },
+                new SnakeBlock() { IsHead = false, Symbol = "#", Position = StartPos + dir.NextPos(1), Type = ObjectType.Player},
+                new SnakeBlock() { IsHead = false, Symbol = "#", Position = StartPos + dir.NextPos(2), Type = ObjectType.Player}
+            };
+            Blocks[1].Parent = Blocks.First(); //ugh, hack to wire parents :(
+            Blocks[2].Parent = Blocks.First();
+        }
+
         public class SnakeBlock : GameObject
         {
             public bool IsHead { get; set; }

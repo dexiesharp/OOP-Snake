@@ -32,11 +32,33 @@ namespace Snake
             Up, Down, Right, Left
         }
 
+        public static Position NextPos(this Direction dir, int steps)
+        {
+            int x = 0,
+                y = 0;
+            switch (dir)
+            {
+                case Direction.Up: y = 1; break;
+                case Direction.Down: y = -1; break;
+                case Direction.Left: x = -1; break;
+                case Direction.Right: x = 1; break;
+            }
+            x *= steps;
+            y *= steps;
+            return new Position() { X = x, Y = y };
+        }
+
         public class Position
         {
             public int X { get; set; }
             public int Y { get; set; }
-        }
+
+            public static Position operator +(Position p1, Position p2)
+            {
+                return new Position() { X = p1.X + p2.X, Y = p1.Y + p2.Y };
+            }
+       }
+
         public static void CheckCollision() //collision checking. TODO: Check all the collisions, get it types and invoke other operations
         {
             List<GameObject> tmp_GameObjects = Program.GameObjects.ToList(); //some weird shitty code to make a new instance of gameobjects, so that if object is deleted on collision - don't break an app
@@ -52,6 +74,15 @@ namespace Snake
                 }
             }
 
+        }
+
+        public static List<GameObject> Add(this List<GameObject> list, Snake snk)
+        {
+            foreach(var block in snk.Blocks)
+            {
+                list.Add(block);
+            }
+            return list;
         }
 
     }

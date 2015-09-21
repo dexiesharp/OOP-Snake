@@ -19,18 +19,10 @@ namespace Snake
         {
             Random positionCoordinate = new Random(); //rng to place first treat randomly 
             double sleepTime = 200;
-            var StartPos = new Position() { X = 40, Y = 12 };             //Center of the screen
-            player = new Snake()
-            {
-                MoveDirection = new MoveDirection() { Direction = Direction.Up },
-                Blocks = new List<Snake.SnakeBlock>(){new Snake.SnakeBlock() { IsHead = true, Symbol = "#", Position = StartPos, Type = ObjectType.Player}}
-            };
-            GameObjects.Add(player.Blocks.First());
-            player.Add();    //adding 2 blocks, so that snake is 3 blocks from beggining
-            player.Add();     
-            player.Move();   // also moving it twice, so that new blocks don't overlap and don't cause collision
-            player.Move();    
-            //Adding objects to GameObjects or they won't be drawn.  
+            //var StartPos = new Position() { X = 40, Y = 12 };             //Center of the screen
+            player = new Snake();
+            GameObjects.Add(player);               //Snake to gamebojects so it is drawn
+
 
             GameObjects.Add(new Treat() { Position = new Position() { X = positionCoordinate.Next(1, 39), Y = positionCoordinate.Next(1,11) }, Symbol = "@", Type = ObjectType.Treat });
 
